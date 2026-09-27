@@ -1,9 +1,8 @@
 {
   "label": "26.3",
   "pack": {
-    "pack_format": 0,
-    "min_format": 0,
-    "max_format": 0,
-    "_README": "Replace these with the real format numbers for this Minecraft version, then delete this line."
+    "pack_format": 97.1,
+    "min_format": 97.1,
+    "max_format": 97.1,
   }
 }
