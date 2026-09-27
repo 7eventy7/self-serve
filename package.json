@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "dev": "node build.mjs && npx wrangler pages dev dist --d1 DB"
+    "dev": "node build.mjs && npx wrangler dev"
   },
   "dependencies": {
     "jszip": "^3.10.1"

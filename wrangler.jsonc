@@ -1,0 +1,18 @@
+{
+  // Must match the Worker's name in the Cloudflare dashboard.
+  "name": "self-serve",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-09-01",
+
+  // The site built by `npm run build`.
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  }
+
+  // Download stats: create a D1 database named "pack-stats", paste its ID
+  // below, then remove the // from these lines (including the comma).
+  // ,"d1_databases": [
+  //   { "binding": "DB", "database_name": "pack-stats", "database_id": "PASTE-ID-HERE" }
+  // ]
+}

@@ -1,10 +1,10 @@
 # Resource Pack Builder
 
-A Vanilla Tweaks–style site: visitors pick the tweaks they want, click **Download**, and get one merged Minecraft resource pack built in their browser. Hosted free on Cloudflare Pages, deployed on every push to `main`.
+A Vanilla Tweaks–style site: visitors pick the tweaks they want, click **Download**, and get one merged Minecraft resource pack built in their browser. Hosted free on Cloudflare (Workers with static assets), deployed on every push to `main`.
 
 - **Static front end** — plain HTML/CSS/JS, no framework. The pack is assembled client-side with JSZip.
 - **Tiny build step** — scans `/versions`, so versions, categories and modules appear automatically when you add folders.
-- **Two small Pages Functions** — download counters stored in Cloudflare D1 (free tier). The site works fine without them; the counters just stay hidden.
+- **A tiny Worker** (`src/worker.js`) — serves the site and two download-counter endpoints backed by Cloudflare D1 (free tier). Without the database the site works fine; the counters just stay hidden.
 
 ## Adding content
 
@@ -88,7 +88,7 @@ Edit `site.config.json`:
 | `tagline` | Line under the title |
 | `packName` | Download filename and pack description (`Tweaks-26.3-4tweaks.zip`) |
 | `author` | Footer credit |
-| `url` | Your live URL, e.g. `https://my-packs.pages.dev` — enables the rebuild link in `Selected Tweaks.txt` |
+| `url` | Your live URL, e.g. `https://self-serve.you.workers.dev` — enables the rebuild link in `Selected Tweaks.txt` |
 
 Replace `site/favicon.png` and `site/pack.png` with your own art. The sample content in `versions/` is placeholder — delete it and drop in your real packs.
 
@@ -97,50 +97,38 @@ Replace `site/favicon.png` and `site/pack.png` with your own art. The sample con
 ```bash
 npm install
 npm run build          # writes dist/
-npm run dev            # build + local Cloudflare server with a local D1 at http://localhost:8788
+npm run dev            # build + local Cloudflare server at http://localhost:8787
 ```
 
-`npm run dev` downloads Wrangler on first use. For a static-only preview, any file server pointed at `dist/` works (stats will be hidden).
+`npm run dev` downloads Wrangler on first use. Stats work locally once the D1 block in `wrangler.jsonc` is enabled.
 
-## Deploying to Cloudflare Pages
+## Deploying to Cloudflare
 
-### 1. Push to GitHub
-
-```bash
-git init -b main          # already done if you used the provided zip
-git add -A && git commit -m "Initial commit"
-git remote add origin https://github.com/<you>/<repo>.git
-git push -u origin main
-```
-
-### 2. Create the Pages project
-
-1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** tab → **Connect to Git**.
-2. Authorize GitHub and pick the repo.
-3. Build settings:
-   - **Production branch:** `main`
-   - **Framework preset:** None
+1. Dashboard → **Workers & Pages** → **Create** → **Import a repository** → pick the GitHub repo.
+2. Settings:
+   - **Project name:** must match `"name"` in `wrangler.jsonc` (currently `self-serve`)
    - **Build command:** `npm run build`
-   - **Build output directory:** `dist`
-   - Root directory: leave blank
-4. **Save and Deploy.** The site will be live at `https://<project>.pages.dev`.
+   - **Deploy command:** `npx wrangler deploy`
+   - **Non-production branch deploy command:** `npx wrangler versions upload` (the default)
+3. **Deploy.** The site goes live at `https://self-serve.<your-subdomain>.workers.dev`.
 
-From now on every push to `main` rebuilds and deploys automatically; pushes to other branches get preview URLs. Node 22 is pinned via `.node-version`.
+Every push to `main` rebuilds and deploys. Pushes to other branches get preview URLs if preview builds are on. Node 22 is pinned via `.node-version`.
 
-### 3. Turn on download stats (optional, free)
+### Download stats (optional, free)
 
-1. **Workers & Pages** → **D1 SQL Database** → **Create** → name it e.g. `pack-stats`.
-2. Open your Pages project → **Settings** → **Bindings** → **Add** → **D1 database**.
-   - Variable name: **`DB`** (exactly)
-   - Database: `pack-stats`
-   - Add it for Production (and Preview if you want previews to count too).
-3. Trigger a redeploy (**Deployments** → latest → **Retry deployment**, or push a commit).
+1. Dashboard → **Storage & Databases** → **D1 SQL Database** → **Create** → name it `pack-stats`.
+2. Copy its **Database ID**.
+3. In `wrangler.jsonc`, uncomment the `d1_databases` block and paste the ID.
+4. Commit and push.
 
-The table is created automatically on first request. How counting works:
+Add bindings in `wrangler.jsonc`, not the dashboard: each deploy applies the file and would remove dashboard-only bindings. The table is created automatically on first request.
+
+How counting works:
 
 - Each download bumps a total counter and one counter per included module.
 - Counts are keyed by module id, so they span all versions.
-- Only ids present in the deployed manifest are counted, so the endpoint can't be used to create junk rows. It isn't rate-limited, so someone determined could still inflate numbers.
+- Only ids present in the deployed manifest are counted.
+- The endpoint isn't rate-limited, so someone determined could inflate numbers.
 - D1's free tier (100k writes/day) is far beyond what a pack site needs.
 
 ## How it works
@@ -148,8 +136,9 @@ The table is created automatically on first request. How counting works:
 ```
 build.mjs          scans versions/, zips each module, detects conflicts, writes dist/manifest.json
 site/              index.html, style.css, app.js — copied to dist/
-functions/api/     stats.js (GET /api/stats), download.js (POST /api/download)
-lib/stats.js       shared D1 helpers for the functions
+src/worker.js      serves dist/ plus GET /api/stats and POST /api/download
+lib/stats.js       D1 helpers used by the worker
+wrangler.jsonc     Cloudflare config: worker name, assets folder, D1 binding
 ```
 
 A static site can't list folders in the browser, so the build step does the scanning at deploy time. Each module is pre-zipped, so a download is one request per selected module rather than one per texture. The browser then unpacks those, merges the shared JSON files, adds `pack.mcmeta`, and hands back a single zip.
