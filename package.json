@@ -1,0 +1,12 @@
+{
+  "name": "resource-pack-builder",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs && npx wrangler pages dev dist --d1 DB"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}

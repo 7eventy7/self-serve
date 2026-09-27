@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resource Packs</title>
+  <meta name="description" content="Pick the resource-pack tweaks you want and download them as one pack.">
+  <meta name="color-scheme" content="dark light">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="vendor/jszip.min.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img class="brand-icon" src="favicon.png" alt="" width="32" height="32">
+        <div>
+          <h1 id="site-title">Resource Packs</h1>
+          <p id="site-tagline" class="tagline"></p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button id="stats-btn" class="chip" type="button" hidden title="Download statistics">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1v9m0 0L4.5 6.5M8 10l3.5-3.5M2 12v2.5h12V12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg>
+          <span id="total-downloads">0</span><span class="chip-label">downloads</span>
+        </button>
+        <label class="version-picker">
+          <span class="visually-hidden">Minecraft version</span>
+          <select id="version-select" aria-label="Minecraft version"></select>
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="toolbar">
+      <div class="search">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10.5 10.5 14 14" stroke="currentColor" stroke-width="1.6"/></svg>
+        <input id="search" type="search" placeholder="Search tweaks" autocomplete="off" aria-label="Search tweaks">
+      </div>
+      <div class="toolbar-buttons">
+        <button id="share-btn" class="btn-ghost" type="button">Copy share link</button>
+        <button id="clear-btn" class="btn-ghost" type="button">Clear selection</button>
+      </div>
+    </div>
+
+    <div id="status" class="status" role="status"></div>
+    <div id="categories"></div>
+    <p id="no-results" class="empty" hidden>No tweaks match that search.</p>
+  </main>
+
+  <footer class="footer">
+    <p id="footer-text"></p>
+  </footer>
+
+  <div class="dock" id="dock">
+    <div class="dock-inner">
+      <div class="dock-summary">
+        <strong id="selected-count">0</strong> <span id="selected-label">tweaks selected</span>
+        <span id="dock-detail" class="dock-detail"></span>
+      </div>
+      <button id="download-btn" class="btn-primary" type="button" disabled>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1v9m0 0L4.5 6.5M8 10l3.5-3.5M2 12v2.5h12V12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg>
+        <span id="download-label">Download pack</span>
+      </button>
+    </div>
+    <div class="progress" id="progress" hidden><div id="progress-bar"></div></div>
+  </div>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <dialog id="stats-dialog" class="dialog">
+    <form method="dialog" class="dialog-head">
+      <h2>Download stats</h2>
+      <button class="icon-btn" value="close" aria-label="Close">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 3 10 10M13 3 3 13" stroke="currentColor" stroke-width="1.8"/></svg>
+      </button>
+    </form>
+    <div class="dialog-body">
+      <div class="stat-total">
+        <span class="stat-total-num" id="stats-total">0</span>
+        <span>packs downloaded, all versions</span>
+      </div>
+      <p class="muted small" id="stats-note"></p>
+      <ol id="stats-list" class="stats-list"></ol>
+    </div>
+  </dialog>
+</body>
+</html>
